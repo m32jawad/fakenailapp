@@ -7,8 +7,8 @@ import * as jpeg from 'jpeg-js';
 import { Asset } from 'expo-asset';
 // import { fetch } from 'node-fetch';
 
-import { fetch as rnFetch } from 'react-native-fetch-blob';
-global.fetch = rnFetch;
+// import { fetch as rnFetch } from 'react-native-fetch-blob';
+// global.fetch = rnFetch;
 
 const modelJson = require('../json_model/model.json');
 // const modelWeights = require('../json_model/json_model/group1-shard1of29.bin');

@@ -1,16 +1,58 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View, Button, Text, Image } from 'react-native';
-import { Camera } from 'expo-camera';
+import { Camera, CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import * as tf from '@tensorflow/tfjs';
 import { bundleResourceIO } from '@tensorflow/tfjs-react-native';
 import * as jpeg from 'jpeg-js';
 import { Asset } from 'expo-asset';
+// import { fetch } from 'node-fetch';
+
+import { fetch as rnFetch } from 'react-native-fetch-blob';
+global.fetch = rnFetch;
 
 const modelJson = require('../json_model/model.json');
 // const modelWeights = require('../json_model/json_model/group1-shard1of29.bin');
-const modelWeights = Array.from({ length: 29 }, (_, i) =>
-  Asset.fromModule(require(`../json_model/group1-shard${i + 1}of29.bin`))
-);
+// const modelWeights = Array.from({ length: 29 }, (_, i) =>
+//   Asset.fromModule(require(`../json_model/group1-shard${i + 1}of29.bin`))
+// );
+
+// const modelWeights = [
+// // for (let i =0; i< 29; i++){
+//   Asset.loadAsync(require('../json_model/group1-shard1of29.bin')),
+//   Asset.loadAsync(require('../json_model/group1-shard2of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard3of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard4of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard5of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard6of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard7of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard8of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard9of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard10of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard11of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard12of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard13of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard14of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard15of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard16of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard17of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard18of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard19of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard20of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard21of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard22of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard23of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard24of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard25of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard26of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard27of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard28of29.bin')),
+//   Asset.fromModule(require('../json_model/group1-shard29of29.bin'))
+// ];
+  // const asset = Asset.fromModule(require(`../json_model/group1-shard${i}of29.bin`));
+  // modelWeights.push(asset)
+  // await asset.downloadAsync();
+  // modelWeights.push(Asset.fromModule(require(`../json_model/group1-shard${i+1}of29.bin`)));
+// }
 
 export default function CameraScreen() {
   const [hasPermission, setHasPermission] = useState(null);
@@ -20,11 +62,15 @@ export default function CameraScreen() {
 
   useEffect(() => {
     (async () => {
-      try {
+      try{
         await tf.ready();
-        const assets = await Promise.all(modelWeights.map(asset => asset.downloadAsync()));
-        const model = await tf.loadLayersModel(bundleResourceIO(modelJson, assets.map(a => a.uri)));
+        // const assets = await Promise.all(modelWeights.map(asset => asset.downloadAsync()));
+        // const model = await tf.loadLayersModel(bundleResourceIO(modelJson, assets.map(a => a.uri)));
         
+        // tf.env().set('IS_BROWSER', false);
+        // tf.setBackend('cpu'); // or 'webgl' if you are using GPU
+        // tf.io.setFetch(fetch);
+        const model = await tf.loadGraphModel('../json_model/model.json');
         // const model = await tf.loadLayersModel(bundleResourceIO(modelJson, modelWeights));
         setModel(model);
       } catch (error) {
@@ -36,7 +82,9 @@ export default function CameraScreen() {
   
   useEffect(() => {
     (async () => {
+      console.log('Requesting camera permissions...');
       const { status } = await Camera.requestCameraPermissionsAsync();
+      console.log('Camera permissions status:', status);
       setHasPermission(status === 'granted');
     })();
   }, []);
